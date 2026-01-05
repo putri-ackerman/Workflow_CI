@@ -24,42 +24,22 @@ jobs:
           MLFLOW_TRACKING_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
-          # 1. Atur URL DagsHub secara manual (ganti sesuai nama repo kamu)
+          # Mengatur alamat DagsHub secara manual agar sinkron
           export MLFLOW_TRACKING_URI=https://dagshub.com/putri_ackerman/my-first-repo.mlflow
           
-          # 2. Beri tahu MLflow untuk menggunakan auth DagsHub
-          export MLFLOW_TRACKING_USERNAME=${{ secrets.DAGSHUB_USERNAME }}
-          export MLFLOW_TRACKING_PASSWORD=${{ secrets.DAGSHUB_TOKEN }}
-          
-          # 3. Jalankan training
+          # Jalankan training (ini akan menambah eksperimen di DagsHub)
           mlflow run MLProject/ --env-manager local
-          
+
       - name: Get latest MLflow run_id
         id: get_run_id
         run: |
-          # Cari folder model di mlruns lokal
+          # Mencari lokasi model yang baru saja dilatih untuk di-build ke Docker
           MODEL_PATH=$(find . -type d -name "model" | grep "artifacts/model" | head -n 1)
           echo "MODEL_PATH=$MODEL_PATH" >> $GITHUB_OUTPUT
-          
-          # Ambil Run ID untuk kebutuhan DagsHub
-          RUN_ID=$(ls -t mlruns/0 | head -n 1)
-          echo "RUN_ID=$RUN_ID" >> $GITHUB_OUTPUT
-
-      - name: Install Python dependencies
-        run: echo "Environment ready."
-
-      - name: Upload to DagsHub
-        env:
-          MLFLOW_TRACKING_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
-          MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
-        run: |
-          # 2. Setelah training lokal sukses, baru kita kirim ke DagsHub
-          # Pastikan URL repo kamu benar (ganti putri_ackerman/my-first-repo jika beda)
-          export MLFLOW_TRACKING_URI=https://dagshub.com/putri_ackerman/my-first-repo.mlflow
-          mlflow gc --run-ids ${{ steps.get_run_id.outputs.RUN_ID }} || echo "Syncing to DagsHub..."
 
       - name: Build Docker Model
         run: |
+          # Membungkus model menjadi image Docker
           mlflow models build-docker -m "${{ steps.get_run_id.outputs.MODEL_PATH }}" -n ackerman19/house_price_prediction:latest --env-manager virtualenv
 
       - name: Log in to Docker Hub
@@ -69,7 +49,9 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Push Docker Image
-        run: docker push ackerman19/house_price_prediction:latest
+        run: |
+          # Mengirim image ke Docker Hub (Kriteria Advance)
+          docker push ackerman19/house_price_prediction:latest
 
       - name: Complete job
-        run: echo "Semua kriteria terpenuhi!"
+        run: echo "Workflow Berhasil! Cek DagsHub dan Docker Hub kamu sekarang."
