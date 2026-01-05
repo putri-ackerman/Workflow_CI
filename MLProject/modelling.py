@@ -23,6 +23,6 @@ mlflow.sklearn.autolog()
 rf_model = RandomForestRegressor(random_state=42)
 rf_model.fit(X_train, y_train)
     
-    # evaluasi sederhana
-    y_pred = rf_model.predict(X_test)
-    rmse = root_mean_squared_error(y_test, y_pred)
+# evaluasi sederhana
+y_pred = rf_model.predict(X_test)
+rmse = root_mean_squared_error(y_test, y_pred)
