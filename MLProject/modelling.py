@@ -10,7 +10,7 @@ import os
 mlflow.set_tracking_uri("https://dagshub.com/putri_ackerman/my-first-repo.mlflow")
 
 # load data
-df = pd.read_csv('MLProject/house_price_precprocessing/house_price_clean.csv')
+df = pd.read_csv('house_price_preprocessing/house_price_clean.csv')
 X = df.drop('House_Price', axis=1) 
 y = df['House_Price']
 
