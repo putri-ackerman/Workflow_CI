@@ -37,22 +37,21 @@ jobs:
       - name: Get latest MLflow run_id
         id: get_run_id
         run: |
-          # Mengambil folder run terbaru dari mlruns lokal
-          LATEST_RUN=$(ls -t mlruns/0 | head -n 1)
-          echo "RUN_ID=$LATEST_RUN" >> $GITHUB_OUTPUT
-          echo "Model lokal ditemukan di ID: $LATEST_RUN"
+          # Mencari folder bernama 'model' di mana pun dia berada setelah training
+          MODEL_PATH=$(find . -type d -name "model" | grep "artifacts/model" | head -n 1)
+          echo "MODEL_PATH=$MODEL_PATH" >> $GITHUB_OUTPUT
+          echo "Ditemukan model di: $MODEL_PATH"
 
       - name: Install Python dependencies
         run: echo "Environment ready for building docker image."
 
       - name: Upload to Google Drive
-        run: echo "Artifacts stored in local runner and DagsHub."
+        run: echo "Artifacts saved locally in runner for Docker build."
 
       - name: Build Docker Model
         run: |
-          # Build docker menggunakan path model lokal yang pasti ada
-          mlflow models build-docker -m "mlruns/0/${{ steps.get_run_id.outputs.RUN_ID }}/artifacts/model" -n ackerman19/house_price_prediction:latest --env-manager local
-
+          # Membangun docker langsung menggunakan path hasil temuan di atas
+          mlflow models build-docker -m "${{ steps.get_run_id.outputs.MODEL_PATH }}" -n ackerman19/house_price_prediction:latest --env-manager local
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
