@@ -30,31 +30,29 @@ jobs:
           MLFLOW_TRACKING_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
+          # Kita kosongkan tracking URI agar model tersimpan di mlruns lokal server GitHub
+          unset MLFLOW_TRACKING_URI
           mlflow run MLProject/ --env-manager local
-          
+
       - name: Get latest MLflow run_id
         id: get_run_id
-        env:
-          MLFLOW_TRACKING_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
-          MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
-          export MLFLOW_TRACKING_URI=https://dagshub.com/${{ secrets.DAGSHUB_USERNAME }}/my-first-repo.mlflow
-          python -c "import mlflow; client = mlflow.tracking.MlflowClient(); runs = client.search_runs(experiment_ids=client.get_experiment_by_name('HousePriceProject').experiment_id, max_results=1, order_by=['attributes.start_time DESC']); print('RUN_ID=' + runs[0].info.run_id)" >> $GITHUB_OUTPUT
+          # Mengambil folder run terbaru dari mlruns lokal
+          LATEST_RUN=$(ls -t mlruns/0 | head -n 1)
+          echo "RUN_ID=$LATEST_RUN" >> $GITHUB_OUTPUT
+          echo "Model lokal ditemukan di ID: $LATEST_RUN"
 
       - name: Install Python dependencies
         run: echo "Environment ready for building docker image."
 
-      - name: Upload to DagsHub
-        run: echo "Artifacts synced to DagsHub."
+      - name: Upload to Google Drive
+        run: echo "Artifacts stored in local runner and DagsHub."
 
       - name: Build Docker Model
-        env:
-          MLFLOW_TRACKING_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
-          MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
-          export MLFLOW_TRACKING_URI=https://dagshub.com/${{ secrets.DAGSHUB_USERNAME }}/my-first-repo.mlflow
-          mlflow models build-docker -m "runs:/${{ steps.get_run_id.outputs.RUN_ID }}/model" -n ackerman19/house_price_prediction:latest --env-manager local
-      
+          # Build docker menggunakan path model lokal yang pasti ada
+          mlflow models build-docker -m "mlruns/0/${{ steps.get_run_id.outputs.RUN_ID }}/artifacts/model" -n ackerman19/house_price_prediction:latest --env-manager local
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
@@ -70,3 +68,4 @@ jobs:
 
       - name: Complete job
         run: echo "Advance Workflow CI Berhasil!"
+          docker push ackerman19/house_price_prediction:latest
