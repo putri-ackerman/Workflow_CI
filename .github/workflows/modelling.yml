@@ -20,10 +20,21 @@ jobs:
         run: pip install mlflow dagshub pandas scikit-learn docker virtualenv
 
       - name: Run mlflow project
+        env:
+          MLFLOW_TRACKING_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
+          MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
-          # 1. Jalankan training secara LOKAL (sesuai kriteria localhost)
+          # 1. Instal library dagshub
+          pip install dagshub
+          
+          # 2. Paksa inisialisasi koneksi ke repositori kamu
+          # Pastikan username 'putri_ackerman' dan repo 'my-first-repo' sudah sesuai
+          python -c "import dagshub; dagshub.init(repo_owner='putri_ackerman', repo_name='my-first-repo', setup_mlflow=True)"
+          
+          # 3. Jalankan training dengan menyertakan variabel lingkungan secara eksplisit
+          MLFLOW_TRACKING_URI=https://dagshub.com/putri_ackerman/my-first-repo.mlflow \
           mlflow run MLProject/ --env-manager local
-
+          
       - name: Get latest MLflow run_id
         id: get_run_id
         run: |
