@@ -1,22 +1,11 @@
-
-import mlflow
-import pandas as pd
-import sklearn
-import platform
-
-# Membuat file conda.yaml secara otomatis
-conda_content = f"""name: house_price_env
+name: house_price_env
 channels:
   - conda-forge
 dependencies:
-  - python={platform.python_version()}
+  - python=3.10
   - pip
   - pip:
-      - mlflow=={mlflow.__version__}
-      - pandas=={pd.__version__}
-      - scikit-learn=={sklearn.__version__}
+      - mlflow
+      - pandas
+      - scikit-learn
       - dagshub
-"""
-
-with open("conda.yaml", "w") as f:
-    f.write(conda_content)
