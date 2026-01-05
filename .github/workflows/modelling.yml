@@ -46,8 +46,9 @@ jobs:
 
       - name: Build Docker Model
         run: |
-          mlflow models build-docker -m "runs:/${{ steps.get_run_id.outputs.RUN_ID }}/model" -n ackerman19/house_price_prediction:latest --env-manager local
-
+          LATEST_RUN=$(ls -t mlruns/0 | head -n 1)
+          mlflow models build-docker -m "mlruns/0/$LATEST_RUN/artifacts/model" -n ackerman19/house_price_prediction:latest --env-manager local
+          
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
