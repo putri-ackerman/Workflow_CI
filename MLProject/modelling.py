@@ -21,9 +21,7 @@ mlflow.sklearn.autolog()
 
 # training model
 rf_model = RandomForestRegressor(random_state=42)
-
-with mlflow.start_run(run_name="Random Forest Basic"):
-    rf_model.fit(X_train, y_train)
+rf_model.fit(X_train, y_train)
     
     # evaluasi sederhana
     y_pred = rf_model.predict(X_test)
